@@ -40,4 +40,12 @@ func handleConnection(conn net.Conn) {
 	defer conn.Close()
 	log.Printf("Connection made from %s", conn.RemoteAddr())
 	log.Printf("HTTP Method: %s \n URL: %s", req.Method, req.Host)
+	log.Printf("Request URL Scheme: %s", req.URL.Scheme)
+	log.Printf("Request URL Host: %s", req.URL.Host)
+	log.Printf("Request URL Path: %s", req.URL.Path)
+	for name, values := range req.Header {
+		for _, value := range values {
+			log.Printf("Header : %s %s\n", name, value)
+		}
+	}
 }
