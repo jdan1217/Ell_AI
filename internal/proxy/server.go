@@ -8,7 +8,6 @@ import (
 
 	"bufio"
 	"log"
-	"net/http"
 )
 
 func StartServer(cfg *config.Config) error {
@@ -32,14 +31,15 @@ func StartServer(cfg *config.Config) error {
 }
 
 func handleConnection(conn net.Conn) {
-	reader := bufio.NewReader(conn)
-	req, err := http.ReadRequest(reader)
-	if err != nil {
-		log.Fatal(err)
-	}
 	defer conn.Close()
+	reader := bufio.NewReader(conn)
+	req, err := parseRequest(reader)
+	if err != nil {
+		log.Printf("Failed to parse HTTP request: %v", err)
+		return
+	}
 	log.Printf("Connection made from %s", conn.RemoteAddr())
-	log.Printf("HTTP Method: %s \n URL: %s", req.Method, req.Host)
+	log.Printf("HTTP Method: %s \n URL: %s", req.Method, req.URL.String())
 	log.Printf("Request URL Scheme: %s", req.URL.Scheme)
 	log.Printf("Request URL Host: %s", req.URL.Host)
 	log.Printf("Request URL Path: %s", req.URL.Path)
