@@ -24,36 +24,40 @@ Key goals include:
 
 ## Planned Features
 
-| Component | Description |
-|---|---|
-| Proxy Engine | TCP listener and HTTP/HTTPS traffic handling |
-| Intercept | Pause, inspect, modify, forward, or drop requests |
-| Target | Organize traffic by destination and application |
-| Repeater | Modify and replay HTTP requests |
-| Intruder | Automate parameter manipulation and testing |
-| AI Analysis | Analyze traffic and identify potential vulnerabilities |
-| AI Agents | Coordinate specialized security testing workflows |
-| Traffic History | Store and review captured HTTP transactions |
-| Dashboard | Web-based interface for interacting with the proxy |
+| Component       | Description                                            |
+| --------------- | ------------------------------------------------------ |
+| Proxy Engine    | TCP listener and HTTP/HTTPS traffic handling           |
+| Intercept       | Pause, inspect, modify, forward, or drop requests      |
+| Target          | Organize traffic by destination and application        |
+| Repeater        | Modify and replay HTTP requests                        |
+| Intruder        | Automate parameter manipulation and testing            |
+| AI Analysis     | Analyze traffic and identify potential vulnerabilities |
+| AI Agents       | Coordinate specialized security testing workflows      |
+| Traffic History | Store and review captured HTTP transactions            |
+| Dashboard       | Web-based interface for interacting with the proxy     |
 
 ## Technology Stack
 
 **Backend**
+
 - Go
 - Go standard library (`net`, `net/http`, `bufio`, `crypto/tls`, `crypto/x509`)
-- PostgreSQL
+- PostgreSQL (planned)
 
 **Frontend (Planned)**
+
 - React
 - TypeScript
 
 **AI Integration (Planned)**
+
 - Large Language Models (LLMs)
 - Open-weight models
 - Agent-based workflows
 - API integrations
 
 **Deployment (Planned)**
+
 - Docker
 - Docker Compose
 
@@ -61,28 +65,25 @@ Key goals include:
 
 The project is being developed as a modular monolith, with individual components responsible for specific functionality.
 
-```text
+```
 Ell_AI/
-├── cmd/
-│   └── proxy/
-│       └── main.go
+├── main.go
+├── dial/
+│   └── main.go
 ├── internal/
 │   ├── config/
-│   ├── proxy/
-│   ├── cert/
-│   ├── traffic/
-│   ├── ai/
-│   ├── agents/
-│   ├── testing/
-│   ├── policy/
-│   ├── storage/
-│   └── api/
-├── frontend/
-├── deployments/
-├── tests/
+│   │   ├── config.go
+│   │   └── config_test.go
+│   └── proxy/
+│       ├── server.go
+│       ├── request.go
+│       ├── request_test.go
+│       └── transport.go
 ├── go.mod
 └── README.md
 ```
+
+Additional packages and directories will be introduced as the project grows.
 
 The architecture will evolve as additional functionality is implemented.
 
@@ -90,23 +91,58 @@ The architecture will evolve as additional functionality is implemented.
 
 Development is being approached incrementally, prioritizing a reliable proxy engine before introducing more advanced functionality.
 
-- [x] Initialize Go project and repository
-- [x] Implement initial configuration
-- [x] Create TCP listener
-- [x] Accept concurrent client connections using goroutines
-- [x] Parse incoming HTTP requests
-- [x] Begin implementing HTTP request parsing unit tests
-- [ ] Forward HTTP requests to upstream servers
-- [ ] Receive and return upstream responses
-- [ ] Implement HTTPS CONNECT tunneling
-- [ ] Implement local certificate authority and TLS interception
-- [ ] Build request/response interception engine
-- [ ] Implement traffic history and storage
-- [ ] Develop Repeater and Target functionality
-- [ ] Build frontend dashboard
-- [ ] Integrate AI models and agent workflows
-- [ ] Implement automated vulnerability testing
-- [ ] Containerize with Docker
+### Project Foundation
+
+- Initialize Go project and repository
+- Implement initial configuration
+- Create TCP listener
+- Accept concurrent client connections using goroutines
+- Implement shared HTTP transport
+- Create separate request parsing functionality
+- Implement HTTP request parsing unit tests
+- Configure and run Go race detector tests
+
+### HTTP Proxy Engine
+
+- Parse incoming HTTP requests
+- Forward HTTP requests to upstream servers using `http.Transport.RoundTrip()`
+- Receive upstream HTTP responses
+- Return upstream responses to the original client
+- Verify end-to-end HTTP forwarding using curl
+- Support multiple HTTP requests over persistent client connections
+- Improve request and response handling, including error cases
+- Implement request and response inspection
+- Implement request modification before forwarding
+
+### HTTPS Support
+
+- Implement HTTPS CONNECT tunneling
+- Implement local certificate authority
+- Generate and manage certificates for HTTPS interception
+- Implement TLS interception and upstream TLS connections
+
+### Traffic Management and Security Testing
+
+- Build request/response interception engine
+- Implement pause, forward, modify, and drop functionality
+- Implement traffic history and storage
+- Develop Repeater and Target functionality
+- Develop Intruder functionality
+- Implement scope restrictions and egress policies
+
+### Frontend and AI Integration
+
+- Build frontend dashboard
+- Develop backend API for frontend communication
+- Integrate AI models and agent workflows
+- Implement AI-assisted request and response analysis
+- Implement automated vulnerability testing
+
+### Deployment
+
+- Containerize with Docker
+- Implement Docker Compose deployment
+- Develop setup and usage documentation
 
 ## Learning Objectives
 
@@ -134,8 +170,32 @@ Users are responsible for ensuring they have permission to test the systems they
 
 ## Current Status
 
-**Active Development – Early Stage**
+**Active Development – HTTP Proxy Engine**
 
-The initial focus is establishing the Go-based proxy engine, including TCP connection management, HTTP request parsing, and unit testing.
+The initial TCP and HTTP proxy functionality is now implemented.
 
-AI functionality, HTTPS interception, and the frontend will be introduced after the core networking functionality is reliable.
+The proxy currently supports:
+
+- TCP listener and concurrent client connection handling.
+- HTTP/1.x request parsing using Go's `net/http` package.
+- Upstream HTTP request forwarding using a shared `http.Transport`.
+- Receiving and returning upstream HTTP responses.
+- Basic request logging, including methods, URLs, and headers.
+- Unit testing for HTTP request parsing and configuration.
+- Race detector testing.
+
+End-to-end HTTP forwarding has been successfully tested using curl against `example.com`.
+
+**Current Limitations:**
+
+- Only basic HTTP forwarding is implemented.
+- Each client connection currently handles one request before closing.
+- Persistent HTTP connections are not yet supported.
+- HTTPS tunneling and TLS interception have not yet been implemented.
+- Request interception, modification, and traffic history remain planned features.
+
+The next development milestone is implementing persistent HTTP connections before moving toward HTTPS support and the interception engine.
+
+
+
+Add clear setup and usage instructions
