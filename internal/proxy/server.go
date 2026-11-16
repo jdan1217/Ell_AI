@@ -3,6 +3,7 @@ package proxy
 import (
 	"fmt"
 	"net"
+	"net/http"
 
 	"github.com/jdan1217/Ell_AI/internal/config"
 
@@ -19,6 +20,7 @@ func StartServer(cfg *config.Config) error {
 	if err != nil {
 		return err
 	}
+	transport := newTransport()
 	defer listener.Close()
 	log.Printf("Listening using %s on address %s", proto, address)
 	for {
@@ -26,16 +28,28 @@ func StartServer(cfg *config.Config) error {
 		if err != nil {
 			return err
 		}
-		go handleConnection(conn)
+		go handleConnection(conn, transport)
 	}
 }
 
-func handleConnection(conn net.Conn) {
+func handleConnection(conn net.Conn, transport *http.Transport) {
 	defer conn.Close()
 	reader := bufio.NewReader(conn)
 	req, err := parseRequest(reader)
 	if err != nil {
 		log.Printf("Failed to parse HTTP request: %v", err)
+		return
+	}
+	req.RequestURI = ""
+	resp, err := transport.RoundTrip(req)
+	if err != nil {
+		log.Printf("Failed to forward request: %v", err)
+		return
+	}
+	defer resp.Body.Close()
+	err = resp.Write(conn)
+	if err != nil {
+		log.Printf("Failed to write response: %v", err)
 		return
 	}
 	log.Printf("Connection made from %s", conn.RemoteAddr())
