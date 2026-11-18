@@ -8,6 +8,7 @@ import (
 	"github.com/jdan1217/Ell_AI/internal/config"
 
 	"bufio"
+	"io"
 	"log"
 )
 
@@ -35,31 +36,42 @@ func StartServer(cfg *config.Config) error {
 func handleConnection(conn net.Conn, transport *http.Transport) {
 	defer conn.Close()
 	reader := bufio.NewReader(conn)
-	req, err := parseRequest(reader)
-	if err != nil {
-		log.Printf("Failed to parse HTTP request: %v", err)
-		return
-	}
-	req.RequestURI = ""
-	resp, err := transport.RoundTrip(req)
-	if err != nil {
-		log.Printf("Failed to forward request: %v", err)
-		return
-	}
-	defer resp.Body.Close()
-	err = resp.Write(conn)
-	if err != nil {
-		log.Printf("Failed to write response: %v", err)
-		return
-	}
-	log.Printf("Connection made from %s", conn.RemoteAddr())
-	log.Printf("HTTP Method: %s \n URL: %s", req.Method, req.URL.String())
-	log.Printf("Request URL Scheme: %s", req.URL.Scheme)
-	log.Printf("Request URL Host: %s", req.URL.Host)
-	log.Printf("Request URL Path: %s", req.URL.Path)
-	for name, values := range req.Header {
-		for _, value := range values {
-			log.Printf("Header : %s %s\n", name, value)
+	for {
+		req, err := parseRequest(reader)
+		if err != nil {
+			if err != io.EOF {
+				log.Printf("Failed to parse HTTP request: %v", err)
+			}
+			return
 		}
+		req.RequestURI = ""
+		resp, err := transport.RoundTrip(req)
+		if err != nil {
+			log.Printf("Failed to forward request: %v", err)
+			return
+		}
+		if req.Close {
+			resp.Close = true
+		}
+		err = resp.Write(conn)
+		resp.Body.Close()
+		if err != nil {
+			log.Printf("Failed to write response: %v", err)
+			return
+		}
+		if req.Close || resp.Close {
+			return
+		}
+		log.Printf("Connection made from %s", conn.RemoteAddr())
+		log.Printf("HTTP Method: %s \n URL: %s", req.Method, req.URL.String())
+		log.Printf("Request URL Scheme: %s", req.URL.Scheme)
+		log.Printf("Request URL Host: %s", req.URL.Host)
+		log.Printf("Request URL Path: %s", req.URL.Path)
+		for name, values := range req.Header {
+			for _, value := range values {
+				log.Printf("Header : %s %s\n", name, value)
+			}
+		}
+		log.Printf("Client requested connection close: %t", req.Close)
 	}
 }
