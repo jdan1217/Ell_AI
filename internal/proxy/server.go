@@ -45,7 +45,7 @@ func handleConnection(conn net.Conn, transport *http.Transport) {
 			return
 		}
 		req.RequestURI = ""
-		resp, err := transport.RoundTrip(req)
+		resp, err := forwardRequest(req, transport)
 		if err != nil {
 			log.Printf("Failed to forward request: %v", err)
 			return
