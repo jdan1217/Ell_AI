@@ -2,7 +2,6 @@ package traffic
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"net/http"
 )
@@ -24,6 +23,5 @@ func NewRequestData(req *http.Request) (RequestData, error) {
 	}
 	req.Body = io.NopCloser(bytes.NewReader(body))
 	data.Body = body
-	fmt.Printf("DEBUG: req.Proto=%q, data.Protocol=%q\n", req.Proto, data.Protocol)
 	return data, nil
 }
