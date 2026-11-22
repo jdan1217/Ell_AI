@@ -1,6 +1,8 @@
 package traffic
 
-import "sync"
+import (
+	"sync"
+)
 
 type History struct {
 	mu      sync.RWMutex

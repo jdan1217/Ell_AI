@@ -61,3 +61,19 @@ func TestHistoryGetByID(t *testing.T) {
 		t.Errorf("Expected ID second, got %s", entry.ID)
 	}
 }
+
+func TestHistoryGetByIDNotFound(t *testing.T) {
+	history := &History{}
+
+	history.Add(TrafficEntry{ID: "first"})
+
+	entry, found := history.GetByID("missing")
+
+	if found {
+		t.Fatal("Expected not to find entry")
+	}
+
+	if entry.ID != "" {
+		t.Errorf("Expected empty entry, got ID %s", entry.ID)
+	}
+}
