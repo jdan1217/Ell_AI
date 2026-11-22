@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"time"
 
 	"github.com/jdan1217/Ell_AI/internal/config"
+	"github.com/jdan1217/Ell_AI/internal/traffic"
 
 	"bufio"
 	"io"
@@ -45,11 +47,20 @@ func handleConnection(conn net.Conn, transport *http.Transport) {
 			return
 		}
 		req.RequestURI = ""
+		start := time.Now()
 		resp, err := forwardRequest(req, transport)
+		duration := time.Since(start)
 		if err != nil {
 			log.Printf("Failed to forward request: %v", err)
 			return
 		}
+		entry, err := traffic.NewTrafficEntry(req, resp, duration)
+		if err != nil {
+			log.Printf("Failed to create traffic entry: %v", err)
+			return
+		}
+		log.Printf("Captured traffic entry: %s (%s)", entry.ID, entry.Duration)
+
 		if req.Close {
 			resp.Close = true
 		}
