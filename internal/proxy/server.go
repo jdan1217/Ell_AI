@@ -24,6 +24,7 @@ func StartServer(cfg *config.Config) error {
 		return err
 	}
 	transport := newTransport()
+	history := &traffic.History{}
 	defer listener.Close()
 	log.Printf("Listening using %s on address %s", proto, address)
 	for {
@@ -31,11 +32,11 @@ func StartServer(cfg *config.Config) error {
 		if err != nil {
 			return err
 		}
-		go handleConnection(conn, transport)
+		go handleConnection(conn, transport, history)
 	}
 }
 
-func handleConnection(conn net.Conn, transport *http.Transport) {
+func handleConnection(conn net.Conn, transport *http.Transport, history *traffic.History) {
 	defer conn.Close()
 	reader := bufio.NewReader(conn)
 	for {
@@ -59,6 +60,7 @@ func handleConnection(conn net.Conn, transport *http.Transport) {
 			log.Printf("Failed to create traffic entry: %v", err)
 			return
 		}
+		history.Add(entry)
 		log.Printf("Captured traffic entry: %s (%s)", entry.ID, entry.Duration)
 
 		if req.Close {

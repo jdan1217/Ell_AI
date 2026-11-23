@@ -9,6 +9,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/jdan1217/Ell_AI/internal/traffic"
 )
 
 func TestForwardRequest(t *testing.T) {
@@ -108,9 +110,10 @@ func TestConnectionClose(t *testing.T) {
 	defer upstream.Close()
 
 	transport := newTransport()
+	history := &traffic.History{}
 	defer transport.CloseIdleConnections()
 
-	go handleConnection(proxyConn, transport)
+	go handleConnection(proxyConn, transport, history)
 
 	request := fmt.Sprintf(
 		"GET %s/test HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n",
