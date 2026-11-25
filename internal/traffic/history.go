@@ -34,3 +34,18 @@ func (h *History) GetByID(id string) (TrafficEntry, bool) {
 	}
 	return TrafficEntry{}, false
 }
+
+func (h *History) Paginated(limit, offset int) []TrafficEntry {
+	h.mu.RLock()
+	defer h.mu.RLock()
+	if offset >= len(h.entries) {
+		return []TrafficEntry{}
+	}
+	end := offset + limit
+	if end > len(h.entries) {
+		end = len(h.entries)
+	}
+	entries := make([]TrafficEntry, end-offset)
+	copy(entries, h.entries[offset:end])
+	return entries
+}
