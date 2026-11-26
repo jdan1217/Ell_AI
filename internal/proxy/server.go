@@ -14,7 +14,7 @@ import (
 	"log"
 )
 
-func StartServer(cfg *config.Config) error {
+func StartServer(cfg *config.Config, history *traffic.History) error {
 	proto := "tcp"
 	host := cfg.Host
 	port := cfg.Port
@@ -24,7 +24,6 @@ func StartServer(cfg *config.Config) error {
 		return err
 	}
 	transport := newTransport()
-	history := &traffic.History{}
 	defer listener.Close()
 	log.Printf("Listening using %s on address %s", proto, address)
 	for {

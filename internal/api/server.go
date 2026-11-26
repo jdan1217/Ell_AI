@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/jdan1217/Ell_AI/internal/traffic"
 )
@@ -26,7 +27,39 @@ func (s *Server) Handler() http.Handler {
 }
 
 func (s *Server) handleGetTraffic(w http.ResponseWriter, r *http.Request) {
-	entries := s.history.All()
+	limitString := r.URL.Query().Get("limit")
+	offsetString := r.URL.Query().Get("offset")
+	limit := 50
+	offset := 0
+	if limitString != "" {
+		parsedlimit, err := strconv.Atoi(limitString)
+		if err != nil {
+			http.Error(w, "invalid limit", http.StatusBadRequest)
+			return
+		}
+		limit = parsedlimit
+		if limit < 1 {
+			http.Error(w, "limit must be greater than 0", http.StatusBadRequest)
+			return
+		}
+		if limit > 500 {
+			http.Error(w, "limit cannot exceed 500", http.StatusBadRequest)
+			return
+		}
+	}
+	if offsetString != "" {
+		parsedoffset, err := strconv.Atoi(offsetString)
+		if err != nil {
+			http.Error(w, "invalid offset", http.StatusBadRequest)
+			return
+		}
+		offset = parsedoffset
+		if offset < 0 {
+			http.Error(w, "offset cannot be less than 0", http.StatusBadRequest)
+			return
+		}
+	}
+	entries := s.history.Paginated(limit, offset)
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(entries); err != nil {
 		log.Printf("Failed to encode traffic history: %v", err)

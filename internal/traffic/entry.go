@@ -8,26 +8,26 @@ import (
 )
 
 type TrafficEntry struct {
-	Request   RequestData
-	Response  ResponseData
-	ID        string
-	Timestamp time.Time
-	Duration  time.Duration
+	Request   RequestData   `json:"request"`
+	Response  ResponseData  `json:"response"`
+	ID        string        `json:"id"`
+	Timestamp time.Time     `json:"timestamp"`
+	Duration  time.Duration `json:"duration"`
 }
 
 type RequestData struct {
-	Method   string
-	URL      string
-	Headers  map[string][]string
-	Body     []byte
-	Protocol string
+	Method   string              `json:"method"`
+	URL      string              `json:"url"`
+	Headers  map[string][]string `json:"headers"`
+	Body     []byte              `json:"body"`
+	Protocol string              `json:"protocol"`
 }
 
 type ResponseData struct {
-	StatusCode int
-	Headers    map[string][]string
-	Body       []byte
-	Protocol   string
+	StatusCode int                 `json:"status"`
+	Headers    map[string][]string `json:"headers"`
+	Body       []byte              `json:"body"`
+	Protocol   string              `json:"protocol"`
 }
 
 func NewTrafficEntry(
