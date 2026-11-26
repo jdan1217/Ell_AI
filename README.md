@@ -1,65 +1,52 @@
 # Ell_AI – AI-Powered Penetration Testing Proxy
 
-## Overview
-
 Ell_AI is an open-source, AI-powered web application security testing proxy being developed from scratch in Go.
 
-Inspired by tools like Burp Suite, the goal is to build a security testing platform that combines HTTP/HTTPS traffic inspection and manipulation with AI-driven vulnerability discovery, request analysis, and penetration testing automation.
+Inspired by tools like Burp Suite, Ell_AI aims to combine HTTP/HTTPS traffic inspection and manipulation with AI-driven vulnerability discovery, request analysis, and automated penetration testing workflows.
 
-Rather than building another traditional intercepting proxy, Ell_AI aims to combine the capabilities of a web security testing platform with modern AI agents and automated security analysis.
+The long-term goal is to build a modular security testing platform that combines traditional application security testing capabilities with modern AI models and agent-based workflows.
+
+**Project Status:** Active Development – HTTP Proxy Engine, Traffic Capture, and Management API
+
+---
 
 ## Project Goals
 
 The primary objective is to develop a functional penetration testing proxy that provides visibility and control over HTTP/HTTPS traffic while leveraging AI to assist with security assessments.
 
-Key goals include:
+Key objectives include:
 
 - **Traffic Interception:** Capture, inspect, modify, and forward HTTP/HTTPS requests and responses.
 - **Request Analysis:** Analyze HTTP methods, URLs, headers, parameters, cookies, and request bodies.
 - **HTTPS Interception:** Implement certificate authority functionality to inspect encrypted HTTPS traffic.
-- **Traffic Management:** Maintain request history and provide the ability to replay, modify, and manipulate requests.
-- **AI Integration:** Incorporate LLMs and AI agents to assist with vulnerability identification, request analysis, and security testing.
-- **Automated Security Testing:** Develop testing workflows for identifying common web application vulnerabilities.
-- **Extensibility:** Build a modular architecture that supports additional testing capabilities and integrations over time.
+- **Traffic Management:** Maintain request history and provide functionality to replay, modify, and manipulate requests.
+- **AI Integration:** Incorporate LLMs and AI agents for vulnerability identification, request analysis, and security testing.
+- **Automated Security Testing:** Develop workflows for identifying common web application vulnerabilities.
+- **Extensibility:** Maintain a modular architecture that supports additional testing capabilities and integrations.
 
-## Planned Features
+## Current Features
 
-| Component | Description |
-|---|---|
-| Proxy Engine | TCP listener and HTTP/HTTPS traffic handling |
-| Intercept | Pause, inspect, modify, forward, or drop requests |
-| Target | Organize traffic by destination and application |
-| Repeater | Modify and replay HTTP requests |
-| Intruder | Automate parameter manipulation and testing |
-| AI Analysis | Analyze traffic and identify potential vulnerabilities |
-| AI Agents | Coordinate specialized security testing workflows |
-| Traffic History | Store and review captured HTTP transactions |
-| Dashboard | Web-based interface for interacting with the proxy |
+The following functionality has been implemented:
 
-## Technology Stack
-
-### Backend
-- Go
-- Go standard library (`net`, `net/http`, `bufio`, `io`, `crypto/tls`, `crypto/x509`)
-- PostgreSQL (planned)
-
-### Frontend (Planned)
-- React
-- TypeScript
-
-### AI Integration (Planned)
-- Large Language Models (LLMs)
-- Open-weight models
-- Agent-based workflows
-- API integrations
-
-### Deployment (Planned)
-- Docker
-- Docker Compose
+| Component | Functionality | Status |
+|---|---|---|
+| Proxy Engine | TCP listener and concurrent client connections | Implemented |
+| HTTP Forwarding | Parse, forward, and return HTTP requests/responses | Implemented |
+| Persistent Connections | Support multiple HTTP requests over a client connection | Implemented |
+| Traffic Capture | Capture structured HTTP request/response data | Implemented |
+| Traffic History | Store captured transactions in memory | Implemented |
+| Management API | Retrieve traffic through HTTP endpoints | Implemented |
+| Traffic Lookup | Retrieve individual transactions by unique ID | Implemented |
+| Pagination | Limit and offset support for traffic history | Implemented |
+| HTTPS Interception | CONNECT tunneling and TLS interception | Planned |
+| Request Interception | Pause, modify, forward, or drop requests | Planned |
+| Repeater / Intruder | Request replay and automated parameter testing | Planned |
+| AI Analysis | AI-assisted vulnerability discovery and analysis | Planned |
+| Frontend | Web-based traffic inspection dashboard | Planned |
 
 ## Architecture
 
-The project is being developed as a modular monolith, with individual packages responsible for specific functionality.
+Ell_AI follows a modular monolith architecture, separating proxy functionality, traffic management, configuration, and API functionality into individual packages.
 
 ```text
 Ell_AI/
@@ -67,6 +54,9 @@ Ell_AI/
 ├── dial/
 │   └── main.go
 ├── internal/
+│   ├── api/
+│   │   ├── server.go
+│   │   └── server_test.go
 │   ├── config/
 │   │   ├── config.go
 │   │   └── config_test.go
@@ -74,10 +64,13 @@ Ell_AI/
 │   │   ├── server.go
 │   │   ├── request.go
 │   │   ├── request_test.go
+│   │   ├── server_test.go
 │   │   └── transport.go
 │   └── traffic/
 │       ├── entry.go
 │       ├── entry_test.go
+│       ├── history.go
+│       ├── history_test.go
 │       ├── request.go
 │       ├── request_test.go
 │       ├── response.go
@@ -86,7 +79,66 @@ Ell_AI/
 └── README.md
 ```
 
-Additional packages and directories will be introduced as the project grows.
+### Component Responsibilities
+
+**Proxy (`internal/proxy`)**
+- Accepts incoming TCP connections.
+- Parses HTTP/1.x requests.
+- Forwards requests to upstream servers using Go's `http.Transport`.
+- Receives upstream responses and returns them to clients.
+- Handles concurrent client connections and persistent HTTP connections.
+- Integrates traffic capture into the request lifecycle.
+
+**Traffic (`internal/traffic`)**
+- Defines structured request, response, and traffic entry models.
+- Generates cryptographically random transaction IDs.
+- Records timestamps and request processing durations.
+- Captures request and response headers and bodies.
+- Maintains thread-safe in-memory traffic history.
+- Supports retrieving all entries, paginated entries, and individual entries by ID.
+
+**API (`internal/api`)**
+- Exposes HTTP endpoints for accessing captured traffic.
+- Provides individual traffic entry retrieval.
+- Supports pagination through query parameters.
+- Uses JSON serialization for communication with future frontend components.
+
+**Configuration (`internal/config`)**
+- Centralizes proxy configuration and default settings.
+
+## Technology Stack
+
+### Backend
+- Go 1.26.4
+- Go standard library:
+  - `net`
+  - `net/http`
+  - `bufio`
+  - `io`
+  - `crypto/tls`
+  - `crypto/x509`
+  - `sync`
+  - `encoding/json`
+
+### Frontend (Planned)
+- React
+- TypeScript
+
+### Data Storage
+- In-memory traffic history (implemented)
+- PostgreSQL (planned)
+
+### AI Integration (Planned)
+- Large Language Models
+- Open-weight models
+- Agent-based workflows
+- API integrations
+
+### Deployment (Planned)
+- Docker
+- Docker Compose
+
+---
 
 ## Getting Started
 
@@ -94,7 +146,7 @@ Additional packages and directories will be introduced as the project grows.
 
 - Go 1.26.4 or later
 - Git
-- A terminal (PowerShell, Command Prompt, or equivalent)
+- PowerShell, Command Prompt, or another terminal
 
 ### Installation
 
@@ -111,21 +163,22 @@ Download dependencies:
 go mod download
 ```
 
-### Running the Proxy
+### Running Ell_AI
 
-Start the proxy using:
+Start the application:
 
 ```bash
 go run .
 ```
 
-By default, the proxy listens on:
+By default, Ell_AI starts two local services:
 
-```text
-127.0.0.1:8080
-```
+| Service | Address | Purpose |
+|---|---|---|
+| Proxy | `127.0.0.1:8080` | Accepts and forwards HTTP traffic |
+| Management API | `127.0.0.1:8081` | Provides access to captured traffic |
 
-The default configuration currently includes:
+The default proxy configuration:
 
 | Setting | Default |
 |---|---|
@@ -136,25 +189,104 @@ The default configuration currently includes:
 
 ### Configuring a Client
 
-Configure your HTTP client to use the local proxy.
+Configure an HTTP client to use Ell_AI as its proxy.
 
-For example, using curl on Windows:
+Example using curl on Windows:
 
 ```powershell
 curl.exe --proxy http://127.0.0.1:8080 http://example.com/
 ```
 
-To test multiple HTTP requests over the same client connection:
+The proxy forwards the request to the upstream server and returns the response to the original client.
 
-```powershell
-curl.exe --proxy http://127.0.0.1:8080 http://example.com/ http://example.org/
+Captured traffic is automatically added to the in-memory traffic history.
+
+---
+
+## Management API
+
+Ell_AI includes a separate HTTP management API for accessing captured traffic.
+
+The API listens on:
+
+```text
+http://127.0.0.1:8081
 ```
 
-The proxy will log incoming connections and HTTP request information, including methods, URLs, schemes, hosts, paths, and headers.
+### Available Endpoints
 
-**Note:** The current implementation supports basic HTTP forwarding. HTTPS tunneling and TLS interception have not yet been implemented.
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/traffic` | Retrieve captured traffic |
+| GET | `/api/traffic/{id}` | Retrieve an individual traffic entry |
 
-### Running Tests
+### Retrieve Traffic History
+
+```powershell
+curl.exe http://127.0.0.1:8081/api/traffic
+```
+
+Returns captured traffic entries in JSON format.
+
+### Retrieve an Individual Traffic Entry
+
+```powershell
+curl.exe http://127.0.0.1:8081/api/traffic/{id}
+```
+
+Replace `{id}` with the unique ID of a captured transaction.
+
+### Pagination
+
+Traffic history supports pagination through `limit` and `offset` query parameters.
+
+Example:
+
+```powershell
+curl.exe "http://127.0.0.1:8081/api/traffic?limit=20&offset=0"
+```
+
+| Parameter | Description | Default |
+|---|---|---|
+| `limit` | Maximum number of entries returned | `50` |
+| `offset` | Number of entries to skip | `0` |
+
+Pagination constraints:
+
+- Minimum limit: `1`
+- Maximum limit: `500`
+- Offset must be nonnegative.
+- Invalid pagination parameters return HTTP `400 Bad Request`.
+
+### Traffic Entry Structure
+
+Each captured transaction contains:
+
+**Request Data**
+- HTTP method
+- URL
+- Headers
+- Body
+- Protocol
+
+**Response Data**
+- Status code
+- Headers
+- Body
+- Protocol
+
+**Transaction Metadata**
+- Unique transaction ID
+- Timestamp
+- Processing duration
+
+Request and response bodies are represented as Base64-encoded values in JSON because the underlying Go fields use `[]byte`.
+
+Traffic history currently resides in memory and is lost when the application stops.
+
+---
+
+## Running Tests
 
 Run all project tests:
 
@@ -174,17 +306,31 @@ Run tests with the Go race detector:
 go test -race ./...
 ```
 
-Run tests for individual packages:
+Run individual package tests:
 
 ```bash
 go test ./internal/proxy/... -v
 go test ./internal/traffic/... -v
+go test ./internal/api/... -v
 go test ./internal/config/... -v
 ```
 
+Testing currently covers:
+- Configuration defaults.
+- HTTP request parsing.
+- HTTP forwarding and connection handling.
+- Traffic entry construction.
+- Request and response data conversion.
+- Thread-safe traffic history operations.
+- Traffic pagination.
+- Management API endpoints.
+- API pagination and invalid parameter handling.
+
+---
+
 ## Development Roadmap
 
-Development is being approached incrementally, prioritizing a reliable proxy engine before introducing more advanced functionality.
+Development is being approached incrementally, prioritizing a reliable proxy engine and traffic management foundation before introducing advanced security testing and AI functionality.
 
 ### 1. Project Foundation
 
@@ -194,110 +340,111 @@ Development is being approached incrementally, prioritizing a reliable proxy eng
 - [x] Accept concurrent client connections using goroutines.
 - [x] Implement shared HTTP transport.
 - [x] Separate request parsing functionality.
-- [x] Implement HTTP request parsing unit tests.
+- [x] Implement request parsing unit tests.
 - [x] Configure and run Go race detector tests.
 
 ### 2. HTTP Proxy Engine
 
 - [x] Parse incoming HTTP requests.
-- [x] Forward HTTP requests to upstream servers using `http.Transport.RoundTrip()`.
+- [x] Forward requests using `http.Transport.RoundTrip()`.
 - [x] Receive upstream HTTP responses.
-- [x] Return upstream responses to the original client.
+- [x] Return upstream responses to clients.
 - [x] Verify end-to-end HTTP forwarding using curl.
-- [x] Support multiple HTTP requests over persistent client connections.
-- [x] Implement request and response error handling.
+- [x] Support persistent HTTP connections.
 - [x] Implement basic request inspection and logging.
 - [ ] Implement request modification before forwarding.
 - [ ] Improve transport configuration, timeouts, and connection management.
 
-### 3. Traffic Data Model
+### 3. Traffic Data Model and History
 
-- [x] Create a structured traffic entry model.
-- [x] Implement cryptographically random traffic IDs.
-- [x] Capture transaction timestamps and processing durations.
-- [x] Capture HTTP request methods, URLs, headers, bodies, and protocols.
-- [x] Capture HTTP response status codes, headers, bodies, and protocols.
-- [x] Deep-copy HTTP header values to preserve captured data.
-- [x] Restore request and response bodies after reading them.
-- [x] Implement unit tests for request data conversion.
-- [x] Implement unit tests for response data conversion.
-- [x] Implement unit tests for traffic entry construction.
-- [ ] Integrate traffic capture into the proxy request lifecycle.
-- [ ] Implement in-memory traffic history.
-- [ ] Implement traffic filtering and retrieval.
+- [x] Create structured traffic entry models.
+- [x] Generate cryptographically random traffic IDs.
+- [x] Capture timestamps and processing durations.
+- [x] Capture request methods, URLs, headers, bodies, and protocols.
+- [x] Capture response status codes, headers, bodies, and protocols.
+- [x] Deep-copy HTTP header values.
+- [x] Restore request and response bodies after reading.
+- [x] Implement traffic entry unit tests.
+- [x] Integrate traffic capture into the proxy lifecycle.
+- [x] Implement thread-safe in-memory traffic history.
+- [x] Implement traffic retrieval by ID.
+- [x] Implement paginated traffic retrieval.
+- [x] Test history operations and concurrent access.
 
-### 4. HTTPS Support
+### 4. Management API
+
+- [x] Implement separate management API server.
+- [x] Implement `GET /api/traffic`.
+- [x] Implement `GET /api/traffic/{id}`.
+- [x] Implement JSON serialization.
+- [x] Implement pagination using limit and offset.
+- [x] Validate pagination parameters.
+- [x] Add API endpoint and pagination tests.
+- [ ] Implement traffic filtering by method, status code, host, and other attributes.
+- [ ] Add traffic deletion and history management functionality.
+
+### 5. HTTPS Support
 
 - [ ] Implement HTTPS CONNECT tunneling.
 - [ ] Implement local certificate authority.
 - [ ] Generate and manage certificates for HTTPS interception.
 - [ ] Implement TLS interception and upstream TLS connections.
 
-### 5. Traffic Management and Security Testing
+### 6. Traffic Interception and Security Testing
 
 - [ ] Build request/response interception engine.
 - [ ] Implement pause, forward, modify, and drop functionality.
-- [ ] Implement traffic history and persistent storage.
-- [ ] Develop Repeater and Target functionality.
+- [ ] Develop Repeater functionality.
+- [ ] Develop Target functionality.
 - [ ] Develop Intruder functionality.
 - [ ] Implement scope restrictions and egress policies.
 
-### 6. Frontend and AI Integration
+### 7. Frontend and AI Integration
 
-- [ ] Build frontend dashboard.
-- [ ] Develop backend API for frontend communication.
+- [ ] Build web-based frontend dashboard.
+- [ ] Integrate frontend with management API.
+- [ ] Implement traffic inspection interface.
 - [ ] Integrate AI models and agent workflows.
 - [ ] Implement AI-assisted request and response analysis.
-- [ ] Implement automated vulnerability testing.
+- [ ] Develop automated vulnerability testing workflows.
 
-### 7. Deployment
+### 8. Storage and Deployment
 
+- [ ] Implement persistent traffic storage.
+- [ ] Integrate PostgreSQL.
 - [ ] Containerize with Docker.
 - [ ] Implement Docker Compose deployment.
 - [ ] Develop setup and usage documentation.
 
-## Current Status
+---
 
-**Active Development – HTTP Proxy Engine and Traffic Data Model**
+## Current Status and Limitations
 
-The initial TCP listener, HTTP forwarding functionality, persistent connection handling, and structured traffic data models have been implemented.
+Ell_AI currently has a functional HTTP forwarding proxy with automatic traffic capture and a separate management API.
 
-### Implemented Functionality
+Implemented functionality has been tested end-to-end using curl, and package tests include execution with Go's race detector.
 
-- TCP listener and concurrent client connection handling.
-- HTTP/1.x request parsing using Go's `net/http` package.
-- Upstream HTTP request forwarding using a shared `http.Transport`.
-- Receiving and returning upstream HTTP responses.
-- Persistent HTTP connections supporting multiple requests over the same client connection.
-- Basic request inspection and logging.
-- Structured request and response data models.
-- Traffic entry construction with unique identifiers, timestamps, and request durations.
-- Request and response body capture with stream restoration.
-- Deep-copying HTTP headers to preserve captured transaction data.
-- Unit tests covering configuration, request parsing, forwarding, connection handling, and traffic data models.
+Current limitations:
 
-End-to-end HTTP forwarding has been successfully tested using curl against external HTTP endpoints. Persistent connections have also been verified by sending multiple requests over the same client TCP connection.
-
-### Current Limitations
-
-- Only basic HTTP forwarding is implemented.
-- HTTPS CONNECT tunneling and TLS interception are not yet supported.
-- Request modification and interception functionality have not yet been implemented.
-- Traffic entries can be constructed, but automatic traffic history capture is not yet integrated into the proxy.
-- Traffic history is not yet persisted or exposed through an API.
-- Frontend and AI functionality remain planned features.
+- Only basic HTTP forwarding is supported.
+- HTTPS CONNECT tunneling and TLS interception are not implemented.
+- Requests cannot yet be paused, modified, or dropped.
+- Traffic history is stored in memory and is not persistent.
+- Traffic filtering has not yet been implemented.
+- There is no frontend dashboard.
+- AI-driven analysis and automated security testing remain planned features.
 
 ### Next Development Milestone
 
-Integrate the traffic data model into the proxy request lifecycle.
+Expand traffic management functionality by implementing filtering and additional retrieval capabilities.
 
-The next objective is to automatically capture every forwarded HTTP transaction, measure request processing duration, and maintain an in-memory collection of captured traffic entries. This will establish the foundation for traffic history, request inspection, and future interception functionality.
+This will establish a stronger foundation for the future traffic inspection interface, Repeater, and AI-powered analysis workflows.
+
+---
 
 ## Learning Objectives
 
-An important part of this project is developing the underlying engineering knowledge by building the application rather than relying on existing proxy frameworks.
-
-Areas of focus include:
+Ell_AI is being built from scratch to develop practical engineering knowledge across several areas:
 
 - Go programming, concurrency, goroutines, and error handling.
 - TCP/IP networking and HTTP protocol internals.
@@ -307,7 +454,7 @@ Areas of focus include:
 - AI integration, LLM orchestration, and agentic workflows.
 - Automated application security testing.
 
-The project is intended to serve as both a functional security engineering tool and a practical demonstration of these skills.
+The project is intended to serve as both a functional security engineering tool and a practical demonstration of backend development, application security, networking, and AI engineering.
 
 ## Security and Responsible Use
 
