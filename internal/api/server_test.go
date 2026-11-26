@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -113,5 +114,162 @@ func TestGetTrafficByIDNotFound(t *testing.T) {
 
 	if recorder.Code != http.StatusNotFound {
 		t.Errorf("Expected status 404, got %d", recorder.Code)
+	}
+}
+
+func TestGetTrafficDefaultPagination(t *testing.T) {
+	history := &traffic.History{}
+
+	for i := 1; i <= 60; i++ {
+		history.Add(traffic.TrafficEntry{
+			ID: fmt.Sprintf("%d", i),
+		})
+	}
+
+	server := NewServer(history)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/traffic", nil)
+	recorder := httptest.NewRecorder()
+
+	server.Handler().ServeHTTP(recorder, req)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("Expected status 200, got %d", recorder.Code)
+	}
+
+	var entries []traffic.TrafficEntry
+	if err := json.NewDecoder(recorder.Body).Decode(&entries); err != nil {
+		t.Fatalf("Failed to decode response: %v", err)
+	}
+
+	if len(entries) != 50 {
+		t.Fatalf("Expected 50 entries, got %d", len(entries))
+	}
+}
+
+func TestGetTrafficCustomLimit(t *testing.T) {
+	history := &traffic.History{}
+
+	for i := 1; i <= 10; i++ {
+		history.Add(traffic.TrafficEntry{
+			ID: fmt.Sprintf("%d", i),
+		})
+	}
+
+	server := NewServer(history)
+
+	req := httptest.NewRequest(
+		http.MethodGet,
+		"/api/traffic?limit=3",
+		nil,
+	)
+	recorder := httptest.NewRecorder()
+
+	server.Handler().ServeHTTP(recorder, req)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("Expected status 200, got %d", recorder.Code)
+	}
+
+	var entries []traffic.TrafficEntry
+	if err := json.NewDecoder(recorder.Body).Decode(&entries); err != nil {
+		t.Fatalf("Failed to decode response: %v", err)
+	}
+
+	if len(entries) != 3 {
+		t.Fatalf("Expected 3 entries, got %d", len(entries))
+	}
+
+	if entries[0].ID != "1" || entries[2].ID != "3" {
+		t.Fatalf("Unexpected entries returned: %+v", entries)
+	}
+}
+
+func TestGetTrafficCustomOffset(t *testing.T) {
+	history := &traffic.History{}
+
+	for i := 1; i <= 10; i++ {
+		history.Add(traffic.TrafficEntry{
+			ID: fmt.Sprintf("%d", i),
+		})
+	}
+
+	server := NewServer(history)
+
+	req := httptest.NewRequest(
+		http.MethodGet,
+		"/api/traffic?limit=3&offset=4",
+		nil,
+	)
+	recorder := httptest.NewRecorder()
+
+	server.Handler().ServeHTTP(recorder, req)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("Expected status 200, got %d", recorder.Code)
+	}
+
+	var entries []traffic.TrafficEntry
+	if err := json.NewDecoder(recorder.Body).Decode(&entries); err != nil {
+		t.Fatalf("Failed to decode response: %v", err)
+	}
+
+	if len(entries) != 3 {
+		t.Fatalf("Expected 3 entries, got %d", len(entries))
+	}
+
+	if entries[0].ID != "5" || entries[1].ID != "6" || entries[2].ID != "7" {
+		t.Fatalf("Unexpected entries returned: %+v", entries)
+	}
+}
+
+func TestGetTrafficInvalidPagination(t *testing.T) {
+	tests := []struct {
+		name string
+		url  string
+	}{
+		{
+			name: "invalid limit",
+			url:  "/api/traffic?limit=abc",
+		},
+		{
+			name: "zero limit",
+			url:  "/api/traffic?limit=0",
+		},
+		{
+			name: "negative limit",
+			url:  "/api/traffic?limit=-5",
+		},
+		{
+			name: "negative offset",
+			url:  "/api/traffic?offset=-5",
+		},
+		{
+			name: "invalid offset",
+			url:  "/api/traffic?offset=abc",
+		},
+		{
+			name: "limit too large",
+			url:  "/api/traffic?limit=501",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			history := &traffic.History{}
+			server := NewServer(history)
+
+			req := httptest.NewRequest(http.MethodGet, tt.url, nil)
+			recorder := httptest.NewRecorder()
+
+			server.Handler().ServeHTTP(recorder, req)
+
+			if recorder.Code != http.StatusBadRequest {
+				t.Fatalf(
+					"Expected status 400, got %d",
+					recorder.Code,
+				)
+			}
+		})
 	}
 }
