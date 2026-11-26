@@ -47,6 +47,11 @@ func handleConnection(conn net.Conn, transport *http.Transport, history *traffic
 			return
 		}
 		req.RequestURI = ""
+		requestData, err := traffic.NewRequestData(req)
+		if err != nil {
+			log.Printf("Failed to capture request: %v", err)
+			return
+		}
 		start := time.Now()
 		resp, err := forwardRequest(req, transport)
 		duration := time.Since(start)
@@ -54,7 +59,7 @@ func handleConnection(conn net.Conn, transport *http.Transport, history *traffic
 			log.Printf("Failed to forward request: %v", err)
 			return
 		}
-		entry, err := traffic.NewTrafficEntry(req, resp, duration)
+		entry, err := traffic.NewTrafficEntry(requestData, resp, duration)
 		if err != nil {
 			log.Printf("Failed to create traffic entry: %v", err)
 			return

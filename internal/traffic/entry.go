@@ -31,7 +31,7 @@ type ResponseData struct {
 }
 
 func NewTrafficEntry(
-	req *http.Request,
+	req RequestData,
 	resp *http.Response,
 	duration time.Duration,
 ) (TrafficEntry, error) {
@@ -44,12 +44,7 @@ func NewTrafficEntry(
 	entry.ID = hex.EncodeToString(id)
 	entry.Timestamp = time.Now()
 	entry.Duration = duration
-
-	requestData, err := NewRequestData(req)
-	if err != nil {
-		return TrafficEntry{}, err
-	}
-	entry.Request = requestData
+	entry.Request = req
 	responseData, err := NewResponseData(resp)
 	if err != nil {
 		return TrafficEntry{}, err

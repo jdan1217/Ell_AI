@@ -29,6 +29,7 @@ func (s *Server) Handler() http.Handler {
 func (s *Server) handleGetTraffic(w http.ResponseWriter, r *http.Request) {
 	limitString := r.URL.Query().Get("limit")
 	offsetString := r.URL.Query().Get("offset")
+	method := r.URL.Query().Get("method")
 	limit := 50
 	offset := 0
 	if limitString != "" {
@@ -59,7 +60,13 @@ func (s *Server) handleGetTraffic(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	entries := s.history.Paginated(limit, offset)
+	var entries []traffic.TrafficEntry
+
+	if method != "" {
+		entries = s.history.PaginatedByMethod(method, limit, offset)
+	} else {
+		entries = s.history.Paginated(limit, offset)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(entries); err != nil {
 		log.Printf("Failed to encode traffic history: %v", err)

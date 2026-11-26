@@ -29,8 +29,11 @@ func TestNewTrafficEntry(t *testing.T) {
 	}
 
 	duration := 150 * time.Millisecond
-
-	trafficEntry, err := NewTrafficEntry(req, resp, duration)
+	requestData, err := NewRequestData(req)
+	if err != nil {
+		t.Fatalf("NewRequestData returned an error: %v", err)
+	}
+	trafficEntry, err := NewTrafficEntry(requestData, resp, duration)
 	if err != nil {
 		t.Fatalf("NewTrafficEntry returned an error: %v", err)
 	}

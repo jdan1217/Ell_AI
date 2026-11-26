@@ -1,6 +1,7 @@
 package traffic
 
 import (
+	"strings"
 	"sync"
 )
 
@@ -37,7 +38,7 @@ func (h *History) GetByID(id string) (TrafficEntry, bool) {
 
 func (h *History) Paginated(limit, offset int) []TrafficEntry {
 	h.mu.RLock()
-	defer h.mu.RLock()
+	defer h.mu.RUnlock()
 	if offset >= len(h.entries) {
 		return []TrafficEntry{}
 	}
@@ -47,5 +48,27 @@ func (h *History) Paginated(limit, offset int) []TrafficEntry {
 	}
 	entries := make([]TrafficEntry, end-offset)
 	copy(entries, h.entries[offset:end])
+	return entries
+}
+
+func (h *History) PaginatedByMethod(method string, limit, offset int) []TrafficEntry {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	matchingMethod := []TrafficEntry{}
+	for _, entry := range h.entries {
+		if strings.EqualFold(entry.Request.Method, method) {
+			matchingMethod = append(matchingMethod, entry)
+		}
+	}
+
+	if offset >= len(matchingMethod) {
+		return []TrafficEntry{}
+	}
+	end := offset + limit
+	if end > len(matchingMethod) {
+		end = len(matchingMethod)
+	}
+	entries := make([]TrafficEntry, end-offset)
+	copy(entries, matchingMethod[offset:end])
 	return entries
 }
