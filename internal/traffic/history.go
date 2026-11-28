@@ -72,3 +72,54 @@ func (h *History) PaginatedByMethod(method string, limit, offset int) []TrafficE
 	copy(entries, matchingMethod[offset:end])
 	return entries
 }
+
+func (h *History) PaginatedByURL(url string, limit int, offset int) []TrafficEntry {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	matchingURL := []TrafficEntry{}
+	for _, entry := range h.entries {
+		if strings.Contains(strings.ToLower(entry.Request.URL), strings.ToLower(url)) {
+			matchingURL = append(matchingURL, entry)
+		}
+	}
+	if offset >= len(matchingURL) {
+		return []TrafficEntry{}
+	}
+	end := offset + limit
+	if end > len(matchingURL) {
+		end = len(matchingURL)
+	}
+	entries := make([]TrafficEntry, end-offset)
+	copy(entries, matchingURL[offset:end])
+	return entries
+}
+
+func (h *History) PaginatedFiltered(method string, url string, limit int, offset int) []TrafficEntry {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	matchingEntries := []TrafficEntry{}
+
+	for _, entry := range h.entries {
+		matchesMethod := method == "" || strings.EqualFold(entry.Request.Method, method)
+
+		matchesURL := url == "" || strings.Contains(
+			strings.ToLower(entry.Request.URL),
+			strings.ToLower(url),
+		)
+
+		if matchesMethod && matchesURL {
+			matchingEntries = append(matchingEntries, entry)
+		}
+	}
+	if offset >= len(matchingEntries) {
+		return []TrafficEntry{}
+	}
+	end := offset + limit
+	if end > len(matchingEntries) {
+		end = len(matchingEntries)
+	}
+	entries := make([]TrafficEntry, end-offset)
+	copy(entries, matchingEntries[offset:end])
+	return entries
+}
